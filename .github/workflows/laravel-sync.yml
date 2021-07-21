@@ -11,7 +11,7 @@ jobs:
     steps:
       - name: Sync Latest Laravel
       - run: curl -L --time-cond ./artisan --remote-time https://api.github.com/repos/laravel/laravel/tarball -o laravel.tar
-      - run: [ -f ./laravel.tar ] && find . -maxdepth 1 ! -name laravel.tar ! -name "docker" ! -name "cmd" ! -name "docker-compose.yml" ! -name . -exec rm -r {} \; && tar xzf ./laravel.tar --strip-components 1 && cp .env.example .env && sed -i '' 's/^DB_HOST.*$/DB_HOST=mysql/g' .env && sed -i '' 's/^REDIS_HOST.*$/REDIS_HOST=redis/g' .env && rm laravel.tar
+      - run: "[ -f ./laravel.tar ] && find . -maxdepth 1 ! -name laravel.tar ! -name 'docker' ! -name 'cmd' ! -name 'docker-compose.yml' ! -name . -exec rm -r {} \\; && tar xzf ./laravel.tar --strip-components 1 && cp .env.example .env && sed -i '' 's/^DB_HOST.*$/DB_HOST=mysql/g' .env && sed -i '' 's/^REDIS_HOST.*$/REDIS_HOST=redis/g' .env && rm laravel.tar"
       - name: Create Pull Request
         uses: technote-space/create-pr-action@v2
         with:
