@@ -1,51 +1,67 @@
-version: '3'
+version: '3.8'
+
 services:
-  app:
+  web:
+    image: laravel-docker/web
+    container_name: web
     build:
-      context: ./docker/app
+      context: ./docker/web
       dockerfile: Dockerfile
-    image: laravel-docker/app:latest
+    ports:
+      - ${APP_PORT:-80}:80
+    volumes:
+      - .:/var/www/html
     networks:
-      - appnet
+      - ldsnet
+  node:
+    image: node:14
+    container_name: node
     volumes:
       - .:/var/www/html
     ports:
-      - ${APP_PORT}:80
+      - ${NODE_PORT:-3000}:3000
+      - ${NODE_PORT_ALT:-3001}:3001
     working_dir: /var/www/html
-  cache:
+    entrypoint: bash -c "npm install && npm run watch"
+    networks:
+      - ldsnet
+  redis:
     image: redis:alpine
-    networks:
-      - appnet
-    volumes:
-      - cachedata:/data
-  db:
-    image: mysql:5.7
-    environment:
-      MYSQL_ROOT_PASSWORD: secret
-      MYSQL_DATABASE: homestead
-      MYSQL_USER: homestead
-      MYSQL_PASSWORD: secret
+    container_name: redis
     ports:
-      - ${DB_PORT}:3306
-    networks:
-      - appnet
+      - ${REDIS_PORT:-6379}:6379
     volumes:
-      - dbdata:/var/lib/mysql
-  node:
-    build:
-      context: ./docker/node
-      dockerfile: Dockerfile
-    image: laravel-docker/node:latest
+      - redisdata:/data
     networks:
-      - appnet
+      - ldsnet
+  mysql:
+    image: mysql:5.7
+    container_name: mysql
+    ports:
+      - ${DB_PORT:-3306}:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: "${DB_PASSWORD}"
+      MYSQL_DATABASE: "${DB_DATABASE}"
+      MYSQL_USER: "${DB_USERNAME}"
+      MYSQL_PASSWORD: "${DB_PASSWORD}"
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
     volumes:
-      - .:/opt
-    working_dir: /opt
+     - mysqldata:/var/lib/mysql
+    networks:
+     - ldsnet
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: mailhog
+    ports:
+      - ${MAILHOG_SMTP_PORT:-1025}:1025
+      - ${MAILHOG_HTTP_PORT:-8025}:8025
+    networks:
+      - ldsnet
 networks:
-  appnet:
+  ldsnet:
     driver: bridge
 volumes:
-  dbdata:
+  mysqldata:
     driver: local
-  cachedata:
+  redisdata:
     driver: local
