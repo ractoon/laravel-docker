@@ -24,14 +24,14 @@ jobs:
             find . -maxdepth 1 ! -name .git ! -name .gitignore ! -name laravel.tar ! -name "docker" ! -name "cmd" ! -name "docker-compose.yml" ! -name . -exec rm -r {} \; && tar xzf ./laravel.tar --strip-components 1 && sed -i -e 's/^DB_HOST.*$/DB_HOST=mysql/g' ".env.example" && sed -i -e 's/^REDIS_HOST.*$/REDIS_HOST=redis/g' ".env.example" && rm laravel.tar
 
             if git show-ref --tags ${{ env.laravel_version }} --quiet; then
+              echo "Tag ${{ env.laravel_version }} exists."
+            else
               echo "Updating files to ${{ env.laravel_version }}"
               git config user.name github-actions
               git config user.email github-actions@github.com
               git commit -am "Auto-update Laravel ${{ env.laravel_version }}"
               git tag ${{ env.laravel_version }}
-              git push --atomic origin master {{ env.laravel_version }}
-            else
-              echo "Tag ${{ env.laravel_version }} exists."
+              git push --atomic origin master ${{ env.laravel_version }}
             fi
           else
             echo "No updates available."
