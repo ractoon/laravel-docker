@@ -1,20 +1,26 @@
+name: Laravel Sync
+
 on:
   schedule:
     - cron: "0 * * * *"
-  pull_request:
-    types: [opened, synchronize, reopened, closed]
 
-name: "Laravel Sync"
 jobs:
   sync:
+    env:
+      laravel_version: $(curl -Ls https://api.github.com/repos/laravel/laravel/tags | jq -r '.[0].name')
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
       - name: Sync Latest Laravel
-      - run: curl -L --time-cond ./artisan --remote-time https://api.github.com/repos/laravel/laravel/tarball -o laravel.tar
-      - run: "[ -f ./laravel.tar ] && find . -maxdepth 1 ! -name laravel.tar ! -name 'docker' ! -name 'cmd' ! -name 'docker-compose.yml' ! -name . -exec rm -r {} \\; && tar xzf ./laravel.tar --strip-components 1 && cp .env.example .env && sed -i '' 's/^DB_HOST.*$/DB_HOST=mysql/g' .env && sed -i '' 's/^REDIS_HOST.*$/REDIS_HOST=redis/g' .env && rm laravel.tar"
-      - name: Create Pull Request
-        uses: technote-space/create-pr-action@v2
+        run: |
+          curl -Ls --time-cond ./artisan --remote-time https://api.github.com/repos/laravel/laravel/tarball -o laravel.tar
+          [ -f ./laravel.tar ] && find . -maxdepth 1 ! -name .git ! -name .gitignore ! -name laravel.tar ! -name "docker" ! -name "cmd" ! -name "docker-compose.yml" ! -name . -exec rm -r {} \; && tar xzf ./laravel.tar --strip-components 1 && sed -i '' 's/^DB_HOST.*$/DB_HOST=mysql/g' .env.example && sed -i '' 's/^REDIS_HOST.*$/REDIS_HOST=redis/g' .env.example && rm laravel.tar
+          echo "::set-env name=laravel_version::$(curl -Ls https://api.github.com/repos/laravel/laravel/tags | jq -r '.[0].name')"
+
+      - name: Commit Changes
+        uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          COMMIT_MESSAGE: 'auto: update laravel'
-          PR_BRANCH_NAME: 'auto-laravel-update-${PR_ID}'
-          PR_TITLE: 'auto: update laravel'
+          commit_message: Automated Update Laravel ${{ env.laravel_version }}
+          tagging_message: ${{ env.laravel_version }}
