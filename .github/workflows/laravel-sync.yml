@@ -9,6 +9,7 @@ on:
 jobs:
   sync:
     env:
+      current_version: $(git describe --tags --abbrev=0)
       laravel_version: $(curl -Ls https://api.github.com/repos/laravel/laravel/tags | jq -r '.[0].name')
     runs-on: ubuntu-latest
     steps:
@@ -18,8 +19,8 @@ jobs:
       - name: Sync Latest Laravel
         run: |
           echo "Checking Laravel repo..."
-          curl -Ls --time-cond ./artisan --remote-time https://api.github.com/repos/laravel/laravel/tarball -o ${{ runner.temp }}/laravel.tar
-          if [ -f ${{ runner.temp }}/laravel.tar ]; then
+          if [[ "${{ env.current_version }}" != "${{ env.laravel_version }}" ]]; then
+            curl -Ls https://api.github.com/repos/laravel/laravel/tarball -o ${{ runner.temp }}/laravel.tar
             echo "Extracting and updating repo files..."
             find . -maxdepth 1 ! -name .git ! -name .github ! -name .gitignore ! -name laravel.tar ! -name "docker" ! -name "cmd" ! -name "docker-compose.yml" ! -name . -exec rm -r {} \; && tar xzf ${{ runner.temp }}/laravel.tar --strip-components 1 --exclude='README.md' -C . && sed -i -e 's/^DB_HOST.*$/DB_HOST=mysql/g' ".env.example" && sed -i -e 's/^REDIS_HOST.*$/REDIS_HOST=redis/g' ".env.example"
 
