@@ -29,7 +29,8 @@ jobs:
               echo "Updating files to ${{ env.laravel_version }}"
               git config user.name github-actions
               git config user.email github-actions@github.com
-              git commit -am "Auto-update Laravel ${{ env.laravel_version }}"
+              git add .
+              git commit -m "Auto-update Laravel ${{ env.laravel_version }}"
               git tag ${{ env.laravel_version }}
               git push --atomic origin master ${{ env.laravel_version }}
             fi
