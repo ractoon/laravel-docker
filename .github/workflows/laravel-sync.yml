@@ -30,7 +30,7 @@ jobs:
               git config user.name github-actions
               git config user.email github-actions@github.com
               git add .
-              if [[ ! `git diff-index --quiet HEAD --` ]]; then
+              if [[ `git diff-index --quiet HEAD --` ]]; then
                 echo "Committing changes..."
                 git commit -m "Auto-update Laravel ${{ env.laravel_version }}"
                 git tag ${{ env.laravel_version }}
