@@ -23,17 +23,22 @@ jobs:
             echo "Extracting and updating repo files..."
             find . -maxdepth 1 ! -name .git ! -name .github ! -name .gitignore ! -name laravel.tar ! -name "docker" ! -name "cmd" ! -name "docker-compose.yml" ! -name . -exec rm -r {} \; && tar xzf ./laravel.tar --strip-components 1 --exclude='README.md' && sed -i -e 's/^DB_HOST.*$/DB_HOST=mysql/g' ".env.example" && sed -i -e 's/^REDIS_HOST.*$/REDIS_HOST=redis/g' ".env.example" && rm laravel.tar
 
-            if git show-ref --tags ${{ env.laravel_version }}; then
+            if [[ `git show-ref --tags "${{ env.laravel_version }}" --quiet --verify` ]]; then
               echo "Tag ${{ env.laravel_version }} exists."
             else
               echo "Updating files to ${{ env.laravel_version }}"
               git config user.name github-actions
               git config user.email github-actions@github.com
               git add .
-              git commit -m "Auto-update Laravel ${{ env.laravel_version }}"
-              git tag ${{ env.laravel_version }}
-              git push --atomic origin master ${{ env.laravel_version }}
+              if [[ ! `git diff-index --quiet HEAD --` ]]; then
+                echo "Committing changes..."
+                git commit -m "Auto-update Laravel ${{ env.laravel_version }}"
+                git tag ${{ env.laravel_version }}
+                git push --atomic origin master ${{ env.laravel_version }}
+              else
+                echo "No changes to commit."
+              fi
             fi
           else
-            echo "No updates available."
+            echo "Up to date."
           fi
