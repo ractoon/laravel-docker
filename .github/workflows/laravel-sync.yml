@@ -18,12 +18,12 @@ jobs:
       - name: Sync Latest Laravel
         run: |
           echo "Checking Laravel repo..."
-          curl -Ls --time-cond ./artisan --remote-time https://api.github.com/repos/laravel/laravel/tarball -o laravel.tar
-          if [ -f ./laravel.tar ]; then
+          curl -Ls --time-cond ./artisan --remote-time https://api.github.com/repos/laravel/laravel/tarball -o ${{ runner.temp }}/laravel.tar
+          if [ -f ${{ runner.temp }}/laravel.tar ]; then
             echo "Extracting and updating repo files..."
-            find . -maxdepth 1 ! -name .git ! -name .github ! -name .gitignore ! -name laravel.tar ! -name "docker" ! -name "cmd" ! -name "docker-compose.yml" ! -name . -exec rm -r {} \; && tar xzf ./laravel.tar --strip-components 1 --exclude='README.md' && sed -i -e 's/^DB_HOST.*$/DB_HOST=mysql/g' ".env.example" && sed -i -e 's/^REDIS_HOST.*$/REDIS_HOST=redis/g' ".env.example" && rm laravel.tar
+            find . -maxdepth 1 ! -name .git ! -name .github ! -name .gitignore ! -name laravel.tar ! -name "docker" ! -name "cmd" ! -name "docker-compose.yml" ! -name . -exec rm -r {} \; && tar xzf ${{ runner.temp }}/laravel.tar --strip-components 1 --exclude='README.md' -C . && sed -i -e 's/^DB_HOST.*$/DB_HOST=mysql/g' ".env.example" && sed -i -e 's/^REDIS_HOST.*$/REDIS_HOST=redis/g' ".env.example"
 
-            if git rev-list "${{ env.laravel_version }}".. >/dev/null; then
+            if git show-ref --tags "${{ env.laravel_version }}" --quiet; then
               echo "Tag ${{ env.laravel_version }} exists."
             else
               echo "Updating files to ${{ env.laravel_version }}"
