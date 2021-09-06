@@ -8,13 +8,15 @@ on:
 
 jobs:
   sync:
-    env:
-      current_version: $(curl -Ls https://api.github.com/repos/ractoon/laravel-docker/tags | jq -r '.[0].name')
-      laravel_version: $(curl -Ls https://api.github.com/repos/laravel/laravel/tags | jq -r '.[0].name')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+
+      - name: Set Env
+        run: |
+          echo "current_version=$(curl -Ls https://api.github.com/repos/ractoon/laravel-docker/tags | jq -r '.[0].name')" >> $GITHUB_ENV
+          echo "laravel_version=$(curl -Ls https://api.github.com/repos/laravel/laravel/tags | jq -r '.[0].name')" >> $GITHUB_ENV
 
       - name: Sync Latest Laravel
         run: |
